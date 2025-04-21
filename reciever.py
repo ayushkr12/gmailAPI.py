@@ -1,9 +1,11 @@
 import os
 import base64
+from datetime import datetime
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from typing import Tuple
 
 # Define the required Gmail API scopes
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
@@ -40,7 +42,7 @@ def list_messages_from_sender(service, sender_email, label_ids=[]):
         msg = service.users().messages().get(userId='me', id=latest_message['id']).execute()
         return msg
 
-def get_message_details(message):
+def get_message_details(message) -> Tuple[str, str]:
     """Print details of the message, including the body"""
     payload = message['payload']
     headers = payload['headers']
@@ -51,6 +53,8 @@ def get_message_details(message):
             subject = header['value']
         elif header['name'] == 'From':
             sender = header['value']
+        elif header['name'] == 'Date':
+            timestamp = header['value']
     
     print(f"From: {sender}")
     print(f"Subject: {subject}")
@@ -63,16 +67,15 @@ def get_message_details(message):
                 body = base64.urlsafe_b64decode(part['body']['data']).decode('utf-8')
     else:
         body = base64.urlsafe_b64decode(payload['body']['data']).decode('utf-8')
-    
-    print(f"Body: {body[:500]}...")  # Print the first 500 characters of the body
+
+    return body, timestamp
 
 def main():
-    sender_email = "sender@domain.tld"
+    sender_email = "test@example.com"
     service = authenticate_gmail_api()
     latest_message = list_messages_from_sender(service, sender_email)
-    
-    if latest_message:
-        get_message_details(latest_message)
 
-if __name__ == '__main__':
-    main()
+    if latest_message:
+        body, timestamp = get_message_details(latest_message)
+        print(f"Timestamp: {timestamp}")
+        print(f"Body: {body}")
