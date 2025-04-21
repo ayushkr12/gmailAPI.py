@@ -56,9 +56,6 @@ def get_message_details(message) -> Tuple[str, str]:
         elif header['name'] == 'Date':
             timestamp = header['value']
     
-    print(f"From: {sender}")
-    print(f"Subject: {subject}")
-    
     # Decode the body of the email (if plain text)
     body = ""
     if 'parts' in payload:
